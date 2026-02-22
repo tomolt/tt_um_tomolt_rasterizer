@@ -1,20 +1,16 @@
-<!---
-
-This file is used to generate your project datasheet. Please fill in the information below and delete any unused
-sections.
-
-You can also include images in this folder and reference them in the markdown. Each image must be less than
-512 kb in size, and the combined size of all images must be less than 1 MB.
--->
-
 ## How it works
 
-Explain how your project works
+TODO
+A classic scanline rasterization algorithm is run in sync with the VGA clock.
 
 ## How to test
 
-Explain how to use your project
+Just look at the VGA output;
+Proper testing protocol still TBD.
 
 ## External hardware
 
-List external hardware used in your project (e.g. PMOD, LED display, etc), if any
+TODO
+Use a VGA adapter
+Later: external SPI RAM (on-board on devboard?)
+
