@@ -4,9 +4,6 @@
  * vim: sts=2 ts=2 sw=2 et
  */
 
-`include "hvsync_generator.v"
-`include "triscan.v"
-
 module rasterizer(clk, reset, hsync, vsync, rgb);
   input clk, reset;
   output hsync, vsync;
