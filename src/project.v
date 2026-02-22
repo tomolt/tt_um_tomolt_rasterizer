@@ -17,19 +17,15 @@ module tt_um_tomolt_rasterizer(
   input  wire       rst_n     // reset_n - low to reset
 );
 
-  // VGA signals
   wire hsync;
   wire vsync;
-  wire [1:0] R;
-  wire [1:0] G;
-  wire [1:0] B;
-  wire video_active;
-  wire [9:0] pix_x;
-  wire [9:0] pix_y;
-  wire sound;
+  wire reset;
+  wire [2:0] rgb;
+
+  assign reset = !rst_n;
 
   // TinyVGA PMOD
-  assign uo_out = {hsync, B[0], G[0], R[0], vsync, B[1], G[1], R[1]};
+  assign uo_out = {hsync, rgb[2], rgb[1], rgb[0], vsync, rgb[2], rgb[1], rgb[0]};
 
   // Unused outputs assigned to 0.
   assign uio_out = 0;
@@ -38,32 +34,11 @@ module tt_um_tomolt_rasterizer(
   // Suppress unused signals warning
   wire _unused_ok = &{ena, ui_in, uio_in};
 
-  hvsync_generator hvsync_gen(
+  rasterizer raster(
     .clk(clk),
-    .reset(~rst_n),
+    .reset(reset),
     .hsync(hsync),
     .vsync(vsync),
-    .display_on(video_active),
-    .hpos(pix_x),
-    .vpos(pix_y)
+    .rgb(rgb)
   );
-
-  wire fill;
-
-  triscan triscan(
-    .clk(clk),
-    .pix_x(pix_x),
-    .pix_y(pix_y),
-    .fill(fill)
-  );
-
-  //wire [2:0] raw_value = pix_x[5:3];
-  //wire [1:0] dithered_value = raw_value[2:1] + {1'0, (raw_value[0] & (pix_x[0] ^ pix_y[0]))};
-
-  wire [1:0] dithered_value = fill ? 2'b11 : 2'b01;
-  
-  assign R = video_active ? dithered_value : 2'b00;
-  assign G = video_active ? dithered_value : 2'b00;
-  assign B = video_active ? dithered_value : 2'b00;
-  
 endmodule

@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright (c) 2026 Thomas Oltmann
  * SPDX-License-Identifier: Apache-2.0
  * vim: sts=2 ts=2 sw=2 et
@@ -22,29 +22,35 @@ module rasterizer(clk, reset, hsync, vsync, rgb);
     .hpos(hpos),
     .vpos(vpos)
   );
-
-  wire [59:0] geometry_1 = {
-    10'd100, 10'd1,
-    10'd1, 10'd100,
-    10'd200, 10'd200
-  };
-
-  wire [59:0] geometry_2 = {
-    10'd300, 10'd100,
-    10'd250, 10'd300,
-    10'd400, 10'd300
-  };
-
-  reg [3:0] frame_counter;
-
+  
+  reg [9:0] frame_counter;
+  
   always @(posedge vsync) begin
     frame_counter <= frame_counter + 1;
   end
-
-  wire [59:0] geometry = frame_counter[0] ? geometry_1 : geometry_2;
-
+  
+  wire [59:0] geometry_1 = {
+    10'd100, 10'd1,
+    10'd150, 10'd100,
+    10'd200, 10'd60 + {5'b00000, frame_counter[4:0]}
+  };
+  
+  wire [59:0] geometry_2 = {
+    10'd300, 10'd200,
+    10'd150, 10'd400,
+    10'd400, 10'd300
+  };
+  
+  wire [59:0] geometry_3 = {
+    10'd600, 10'd200,
+    10'd450, 10'd300,
+    10'd550, 10'd400
+  };
+  
+  wire [59:0] geometry = (frame_counter[0] ? geometry_1 : geometry_2);
+  
   wire fill;
-
+  
   triscan tscan(
     .clk(clk),
     .reset(reset),
@@ -55,10 +61,9 @@ module rasterizer(clk, reset, hsync, vsync, rgb);
     .geometry(geometry),
     .fill(fill)
   );
-
+  
   wire [2:0] value = fill ? (frame_counter[0] ? 3'b001 : ((hpos[0] ^ vpos[0]) ? 3'b001 : 3'b011)) : 3'b000;
-
+  
   assign rgb = display_on ? value : 0;
 
 endmodule
-
