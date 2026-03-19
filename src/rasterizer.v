@@ -35,6 +35,9 @@ module tt_um_tomolt_rasterizer (
     .vpos(vpos)
   );
 
+  reg [59:0] geometry;
+
+  /*
   reg [4:0] permut_1;
   reg [4:0] permut_2;
 
@@ -78,11 +81,20 @@ module tt_um_tomolt_rasterizer (
       end
     end
   end
+  */
 
+  /*
   wire [59:0] geometry_1 = {
     10'd100 + {6'b000000, permut_1[4:1]}, 10'd1,
     10'd150 + {5'b00000, permut_2}, 10'd100,
     10'd200, 10'd60 + {5'b00000, permut_1}
+  };
+  */
+
+  wire [59:0] geometry_1 = {
+    10'd100, 10'd1,
+    10'd150, 10'd100,
+    10'd200, 10'd60
   };
 
   wire [59:0] geometry_2 = {
@@ -103,15 +115,16 @@ module tt_um_tomolt_rasterizer (
     if (hpos == 640) begin
       if (vpos+1 < geometry_2[49:40]) begin
         geometry_sel <= 3'b001;
+        geometry <= geometry_1;
       end else if (vpos+1 < geometry_3[49:40]) begin
         geometry_sel <= 3'b010;
+        geometry <= geometry_2;
       end else begin
         geometry_sel <= 3'b100;
+        geometry <= geometry_3;
       end
     end
   end
-
-  wire [59:0] geometry = (geometry_sel[0] ? geometry_1 : (geometry_sel[1] ? geometry_2 : geometry_3));
 
   wire fill;
 
