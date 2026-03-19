@@ -118,8 +118,6 @@ module tt_um_tomolt_rasterizer (
   triscan tscan(
     .clk(clk),
     .rst_n(rst_n),
-    .hsync(hsync),
-    .vsync(vsync),
     .hpos(hpos),
     .vpos(vpos),
     .geometry(geometry),

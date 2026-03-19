@@ -9,8 +9,6 @@
 module triscan(
   input wire clk,
   input wire rst_n,
-  input wire hsync,
-  input wire vsync,
   input wire [9:0] hpos,
   input wire [9:0] vpos,
   input wire [59:0] geometry,
@@ -31,17 +29,15 @@ module triscan(
   wire [9:0] edge_23_dx = vtx_3_x - vtx_2_x;
   wire [9:0] edge_23_dy = vtx_3_y - vtx_2_y;
   
-  reg [9:0] left_dx;
   reg [9:0] left_x;
   reg [9:0] left_err;
   
-  reg [9:0] right_dx;
   reg [9:0] right_x;
   reg [9:0] right_err;
 
   // The state of the triangle scanline rasterizer is determined
   // by which vertices of the triangle we have already scanned over vertically.
-  parameter
+  localparam
     STATE_V1    = 2'b00,
     STATE_V1_V2 = 2'b01,
     STATE_V1_V3 = 2'b10,
