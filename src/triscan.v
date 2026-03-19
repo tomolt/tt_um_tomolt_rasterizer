@@ -63,8 +63,8 @@ module triscan(
     end
   endfunction
   
-  always @(posedge clk, negedge rst_n) begin
-    if (!rst_n) begin
+  always @(posedge clk or negedge rst_n) begin
+    if (~rst_n) begin
       state <= STATE_CLEAR;
       
     end else if (hpos == 641) begin

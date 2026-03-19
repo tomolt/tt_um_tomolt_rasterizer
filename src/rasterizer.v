@@ -23,7 +23,7 @@ module tt_um_tomolt_rasterizer (
   wire display_on;
   wire [9:0] hpos;
   wire [9:0] vpos;
-  wire hvreset = !rst_n;
+  wire hvreset = ~rst_n;
 
   hvsync_generator hvsync_gen(
     .clk(clk),
@@ -42,8 +42,8 @@ module tt_um_tomolt_rasterizer (
   reg permut_2_dir;
 
   // Animate the geometry just a tiny bit to make it more interesting.
-  always @(posedge vsync, negedge rst_n) begin
-    if (!rst_n) begin
+  always @(posedge vsync or negedge rst_n) begin
+    if (~rst_n) begin
       permut_1 <= 0;
       permut_1_dir <= 1;
       permut_2 <= 0;
@@ -99,7 +99,7 @@ module tt_um_tomolt_rasterizer (
 
   reg [2:0] geometry_sel;
 
-  always @(posedge clk, negedge rst_n) begin
+  always @(posedge clk) begin
     if (hpos == 640) begin
       if (vpos+1 < geometry_2[49:40]) begin
         geometry_sel <= 3'b001;
