@@ -35,29 +35,24 @@ module tt_um_tomolt_rasterizer (
     .vpos(vpos)
   );
 
+  wire [59:0] default_geometry = {
+    10'd500, 10'd120,
+    10'd350, 10'd220,
+    10'd600, 10'd320
+  };
+
   reg [59:0] geometry;
 
   wire cs_n = uio_in[0];
   wire mosi = uio_in[1];
   wire sck  = uio_in[3];
 
-  reg [59:0] in_buffer;
-  reg [5:0]  in_count;
-
-  always @(negedge rst_n or posedge sck or posedge cs_n) begin
+  always @(negedge rst_n or posedge sck) begin
     if (~rst_n) begin
-      in_buffer <= 0;
-      in_count <= 0;
+      geometry <= default_geometry;
     end else begin
       if (~cs_n) begin
-        in_buffer <= {in_buffer[59-1:0], mosi};
-        if (in_count == 59) begin
-          geometry <= in_buffer;
-        end
-        in_count <= in_count + 1;
-      end else begin
-        in_buffer <= 0;
-        in_count <= 0;
+        geometry <= {geometry[59-1:0], mosi};
       end
     end
   end
@@ -121,12 +116,6 @@ module tt_um_tomolt_rasterizer (
     10'd100, 10'd1,
     10'd150, 10'd100,
     10'd200, 10'd60
-  };
-
-  wire [59:0] geometry_2 = {
-    10'd500, 10'd120,
-    10'd350, 10'd220,
-    10'd600, 10'd320
   };
 
   wire [59:0] geometry_3 = {
