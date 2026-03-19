@@ -47,12 +47,20 @@ module tt_um_tomolt_rasterizer (
   wire mosi = uio_in[1];
   wire sck  = uio_in[3];
 
-  always @(negedge rst_n or posedge sck) begin
+  reg sck_prev;
+
+  always @(negedge rst_n or posedge clk) begin
     if (~rst_n) begin
       geometry <= default_geometry;
+      sck_prev <= 0;
     end else begin
       if (~cs_n) begin
-        geometry <= {geometry[59-1:0], mosi};
+        if (~sck_prev && sck) begin
+          geometry <= {geometry[59-1:0], mosi};
+        end
+        sck_prev <= sck;
+      end else begin
+        sck_prev <= 0;
       end
     end
   end
