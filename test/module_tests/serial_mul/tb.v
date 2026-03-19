@@ -20,7 +20,7 @@ module tb ();
   reg load;
   reg [WIDTH-1:0] n1;
   reg [WIDTH-1:0] n2;
-  wire [WIDTH-1:0] product;
+  wire [2*WIDTH-1:0] product;
 
   serial_mul #(.WIDTH(WIDTH)) serial_mul (
 	  .clk(clk),

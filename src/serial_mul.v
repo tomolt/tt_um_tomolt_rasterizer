@@ -9,7 +9,7 @@ module serial_mul #(parameter WIDTH = 10) (
   input wire load,
   input wire [WIDTH-1:0] n1,
   input wire [WIDTH-1:0] n2,
-  output reg [WIDTH-1:0] product);
+  output reg [2*WIDTH-1:0] product);
 
   reg [3:0] state;
   reg [WIDTH-1:0] window;
@@ -22,9 +22,9 @@ module serial_mul #(parameter WIDTH = 10) (
     end else begin
       if (state < WIDTH) begin
         if (window[WIDTH-1]) begin
-          product = {product[WIDTH-2:0], 1'b0} + n2;
+          product = {product[2*WIDTH-2:0], 1'b0} + n2;
         end else begin
-          product = {product[WIDTH-2:0], 1'b0};
+          product = {product[2*WIDTH-2:0], 1'b0};
         end
         window = {window[WIDTH-2:0], 1'b0};
         state <= state + 1;

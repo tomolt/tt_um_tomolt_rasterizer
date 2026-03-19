@@ -19,7 +19,7 @@ async def check_multiplication(dut, n1, n2):
     await ClockCycles(dut.clk, 2*WIDTH)
     product = dut.product.value
 
-    assert product == ((n1 * n2) & ((1 << WIDTH) - 1))
+    assert product == ((n1 * n2) & ((1 << 2*WIDTH) - 1))
 
 @cocotb.test()
 async def test_project(dut):
