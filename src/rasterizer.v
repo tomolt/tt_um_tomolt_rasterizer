@@ -43,9 +43,20 @@ module tt_um_tomolt_rasterizer (
 
   reg [59:0] geometry;
 
+  localparam
+    SERIAL_V1X = 3'b000,
+    SERIAL_V1Y = 3'b001,
+    SERIAL_V2X = 3'b010,
+    SERIAL_V2Y = 3'b011,
+    SERIAL_V3X = 3'b100,
+    SERIAL_V3Y = 3'b101;
+
   wire cs_n = uio_in[0];
   wire mosi = uio_in[1];
   wire sck  = uio_in[3];
+
+  reg [2:0] serial_state;
+  reg [3:0] serial_count;
 
   reg sck_prev;
 
@@ -53,14 +64,44 @@ module tt_um_tomolt_rasterizer (
     if (~rst_n) begin
       geometry <= default_geometry;
       sck_prev <= 0;
+      serial_state <= SERIAL_V1X;
+      serial_count <= 0;
+
     end else begin
       if (~cs_n) begin
+
         if (~sck_prev && sck) begin
-          geometry <= {geometry[59-1:0], mosi};
+          // Handling 'geometry' as one big shift register causes the PDK
+          // to insert an excessive number of delay buffers and eventually
+          // fail the timing checks. So instead, we treat every 10-bit word
+          // as its own little shift register.
+          case (serial_state)
+            SERIAL_V1X: geometry[59:50] <= {geometry[59-1:50], mosi};
+            SERIAL_V1Y: geometry[49:40] <= {geometry[49-1:40], mosi};
+            SERIAL_V2X: geometry[39:30] <= {geometry[39-1:30], mosi};
+            SERIAL_V2Y: geometry[29:20] <= {geometry[29-1:20], mosi};
+            SERIAL_V3X: geometry[19:10] <= {geometry[19-1:10], mosi};
+            SERIAL_V3Y: geometry[ 9: 0] <= {geometry[ 9-1: 0], mosi};
+            default:;
+          endcase
+
+          if (serial_count == 9) begin
+            if (serial_state == SERIAL_V3Y) begin
+              serial_state <= SERIAL_V1X;
+            end else begin
+              serial_state <= serial_state + 1;
+            end
+            serial_count <= 0;
+          end else begin
+            serial_count <= serial_count + 1;
+          end
         end
         sck_prev <= sck;
+
       end else begin
         sck_prev <= 0;
+        serial_state <= SERIAL_V1X;
+        serial_count <= 0;
       end
     end
   end
