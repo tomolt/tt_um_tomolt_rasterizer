@@ -114,11 +114,7 @@ module tt_um_tomolt_rasterizer (
     end
   end
 `else
-  reg [59:0] geometry;
-
-  always @(negedge rst_n or negedge clk) begin
-    geometry <= default_geometry;
-  end
+  wire [59:0] geometry = default_geometry;
 `endif
 
   /*
@@ -206,7 +202,7 @@ module tt_um_tomolt_rasterizer (
   end
   */
 
-`ifdef NOTDEF
+`ifndef NOTDEF
   wire fill;
 
   triscan tscan(
