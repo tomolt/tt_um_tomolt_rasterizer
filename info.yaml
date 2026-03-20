@@ -50,8 +50,8 @@ pinout:
   uio[1]: "MOSI"
   uio[2]: ""
   uio[3]: "SCK"
-  uio[4]: ""
-  uio[5]: ""
+  uio[4]: "vsync"
+  uio[5]: "hsync"
   uio[6]: ""
   uio[7]: ""
 

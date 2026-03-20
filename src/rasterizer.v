@@ -233,14 +233,21 @@ module tt_um_tomolt_rasterizer (
   assign uo_out[6] = pixel[4];
   assign uo_out[7] = hsync;
 
+  // Serial Pins
+  assign uio_oe[3:0] = 0;
+
+  // Event Indicator Pins
+  assign uio_oe[5:4] = 1;
+  assign uio_out[4] = vsync;
+  assign uio_out[5] = hsync;
+
   // Unused outputs assigned to 0.
   assign uio_out = 0;
 
-  // Configure all UIO pins as inputs.
-  assign uio_oe  = 0;
-
   // Suppress unused signals warning
   wire _unused_ok = &{ena, ui_in, uio_in};
+  // Configure unused UIO pins as inputs.
+  assign uio_oe[7:6] = 0;
 
 endmodule
 
