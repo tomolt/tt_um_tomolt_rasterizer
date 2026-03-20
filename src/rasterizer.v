@@ -91,9 +91,9 @@ module tt_um_tomolt_rasterizer (
           // as its own little shift register.
           case (serial_state)
             SERIAL_V1X: geometry[59:50] <= {geometry[59-1:50], mosi};
-            /*
             SERIAL_V1Y: geometry[49:40] <= {geometry[49-1:40], mosi};
             SERIAL_V2X: geometry[39:30] <= {geometry[39-1:30], mosi};
+            /*
             SERIAL_V2Y: geometry[29:20] <= {geometry[29-1:20], mosi};
             SERIAL_V3X: geometry[19:10] <= {geometry[19-1:10], mosi};
             SERIAL_V3Y: geometry[ 9: 0] <= {geometry[ 9-1: 0], mosi};
