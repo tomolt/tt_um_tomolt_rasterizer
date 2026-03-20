@@ -31,11 +31,14 @@ module triscan(
   wire [9:0] right_y1 = (state == STATE_V1 || state == STATE_V1_V2) ? vtx_1_y : vtx_3_y;
   wire [9:0] right_x2 = (state == STATE_V1 || state == STATE_V1_V2) ? vtx_3_x : vtx_2_x;
   wire [9:0] right_y2 = (state == STATE_V1 || state == STATE_V1_V2) ? vtx_3_y : vtx_2_y;
+
+  wire [9:0] left_dx_abs = left_x1 <= left_x2 ? left_x2 - left_x1 : left_x1 - left_x2;
+  wire [9:0] left_dy = left_y2 - left_y1;
+  wire [9:0] right_dx_abs = right_x1 <= right_x2 ? right_x2 - right_x1 : right_x1 - right_x2;
+  wire [9:0] right_dy = right_y2 - right_y1;
   
-  wire [9:0] edge_dx = hpos < 640 + 49 ? (left_x2 - left_x1) : (right_x2 - right_x1);
-  wire [9:0] edge_dy = hpos < 640 + 49 ? (left_y2 - left_y1) : (right_y2 - right_y1);
-  wire [9:0] edge_dx_abs = abs(edge_dx);
-  wire [9:0] edge_dy_abs = abs(edge_dy);
+  wire [9:0] edge_dx_abs = hpos < 640 + 49 ? left_dx_abs : right_dx_abs;
+  wire [9:0] edge_dy = hpos < 640 + 49 ? left_dy : right_dy;
   wire [9:0] edge_dist = hpos < 640 + 49 ? (vpos+10'd1) - left_y1 : (vpos+10'd1) - (right_y1);
   
   wire md_load = (hpos == 640 + 10) || (hpos == 640 + 50);
@@ -51,7 +54,7 @@ module triscan(
     .load(md_load),
     .mu1(edge_dx_abs),
     .mu2(edge_dist),
-    .den(edge_dy_abs),
+    .den(edge_dy),
     .quo(md_quo),
     .rem(md_rem)
   );
@@ -65,20 +68,6 @@ module triscan(
     STATE_CLEAR = 2'b11;
 
   reg [1:0] state;
-  
-  function [9:0] abs;
-    input [9:0] x;
-    begin
-      abs = x[9] ? -x : x;
-    end
-  endfunction
-  
-  function [9:0] sign;
-    input [9:0] x;
-    begin
-      sign = x[9] ? -1 : 1;
-    end
-  endfunction
   
   always @(posedge clk or negedge rst_n) begin
     if (~rst_n) begin
@@ -113,10 +102,20 @@ module triscan(
           end
       endcase
       
+    // Wait until the multiply-divide unit is done, then update the edge
+    // position.
     end else if (hpos == 640 + 45) begin
-      left_x <= (edge_dx[9] ^ edge_dy[9] ? -md_quo : md_quo) + left_x1;
+      if (left_x1 <= left_x2) begin
+        left_x <= left_x1 + md_quo;
+      end else begin
+        left_x <= left_x1 - md_quo;
+      end
     end else if (hpos == 640 + 85) begin
-      right_x <= (edge_dx[9] ^ edge_dy[9] ? -md_quo : md_quo) + right_x1;
+      if (right_x1 <= right_x2) begin
+        right_x <= right_x1 + md_quo;
+      end else begin
+        right_x <= right_x1 - md_quo;
+      end
     end
   end
   
