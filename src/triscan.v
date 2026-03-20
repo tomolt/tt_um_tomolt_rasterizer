@@ -32,9 +32,11 @@ module triscan(
   wire [9:0] right_x2 = (state == STATE_V1 || state == STATE_V1_V2) ? vtx_3_x : vtx_2_x;
   wire [9:0] right_y2 = (state == STATE_V1 || state == STATE_V1_V2) ? vtx_3_y : vtx_2_y;
   
-  wire [9:0] edge_dx = (hpos < 640 + 49 ? (left_x2 - left_x1) : (right_x2 - right_x1));
-  wire [9:0] edge_dy = (hpos < 640 + 49 ? (left_y2 - left_y1) : (right_y2 - right_y1));
-  wire [9:0] edge_top = (hpos < 640 + 49 ? left_y1 : right_y1);
+  wire [9:0] edge_dx = hpos < 640 + 49 ? (left_x2 - left_x1) : (right_x2 - right_x1);
+  wire [9:0] edge_dy = hpos < 640 + 49 ? (left_y2 - left_y1) : (right_y2 - right_y1);
+  wire [9:0] edge_dx_abs = abs(edge_dx);
+  wire [9:0] edge_dy_abs = abs(edge_dy);
+  wire [9:0] edge_dist = hpos < 640 + 49 ? (vpos+10'd1) - left_y1 : (vpos+10'd1) - (right_y1);
   
   wire md_load = (hpos == 640 + 10) || (hpos == 640 + 50);
   
@@ -47,9 +49,9 @@ module triscan(
   serial_muldiv muldiv(
     .clk(clk),
     .load(md_load),
-    .mu1(abs(edge_dx)),
-    .mu2((vpos+10'd1) - edge_top),
-    .den(abs(edge_dy)),
+    .mu1(edge_dx_abs),
+    .mu2(edge_dist),
+    .den(edge_dy_abs),
     .quo(md_quo),
     .rem(md_rem)
   );
