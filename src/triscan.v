@@ -22,22 +22,81 @@ module triscan(
   wire [9:0] vtx_3_x = geometry[19:10];
   wire [9:0] vtx_3_y = geometry[ 9: 0];
   
-  wire [9:0] edge_12_dx = vtx_2_x - vtx_1_x;
-  wire [9:0] edge_12_dy = vtx_2_y - vtx_1_y;
-  wire [9:0] edge_13_dx = vtx_3_x - vtx_1_x;
-  wire [9:0] edge_13_dy = vtx_3_y - vtx_1_y;
-  wire [9:0] edge_23_dx = vtx_3_x - vtx_2_x;
-  wire [9:0] edge_23_dy = vtx_3_y - vtx_2_y;
-  
   reg [9:0] left_dx;
   reg [9:0] left_dy;
-  reg [9:0] left_x;
-  reg [9:0] left_err;
-  
   reg [9:0] right_dx;
   reg [9:0] right_dy;
+  reg [9:0] left_off;
+  reg [9:0] left_top;
+  reg [9:0] right_off;
+  reg [9:0] right_top;
+  wire [9:0] edge_dx = (hpos < 640 + 45 ? left_dx : right_dx);
+  wire [9:0] edge_dy = (hpos < 640 + 45 ? left_dy : right_dy);
+  wire [9:0] edge_top = (hpos < 640 + 45 ? left_top : right_top);
+  
+  wire md_load = (hpos == 640 + 10) || (hpos == 640 + 50);
+  
+  wire [9:0] md_quo;
+  wire [9:0] md_rem;
+  
+  reg [9:0] left_x;
   reg [9:0] right_x;
-  reg [9:0] right_err;
+  
+  serial_muldiv muldiv(
+    .clk(clk),
+    .load(md_load),
+    .mu1(abs(edge_dx)),
+    .mu2((vpos+10'd1) - edge_top),
+    .den(abs(edge_dy)),
+    .quo(md_quo),
+    .rem(md_rem)
+  );
+  
+  always @(*) begin
+    case (state)
+      STATE_V1, STATE_V1_V3: begin
+        left_dx = vtx_2_x - vtx_1_x;
+        left_dy = vtx_2_y - vtx_1_y;
+        left_off = vtx_1_x;
+        left_top = vtx_1_y;
+      end
+      STATE_V1_V2: begin
+        left_dx = vtx_3_x - vtx_2_x;
+        left_dy = vtx_3_y - vtx_2_y;
+        left_off = vtx_2_x;
+        left_top = vtx_2_y;
+      end
+      STATE_CLEAR: begin
+        left_dx = 10'bx;
+      	left_dy = 10'bx;
+        left_off = 10'bx;
+        left_top = 10'bx;
+      end
+    endcase
+  end
+  
+  always @(*) begin
+    case (state)
+      STATE_V1, STATE_V1_V2: begin
+        right_dx = vtx_3_x - vtx_1_x;
+        right_dy = vtx_3_y - vtx_1_y;
+        right_off = vtx_1_x;
+        right_top = vtx_1_y;
+      end
+      STATE_V1_V3: begin
+        right_dx = vtx_2_x - vtx_3_x;
+        right_dy = vtx_2_y - vtx_3_y;
+        right_off = vtx_3_x;
+        right_top = vtx_3_y;
+      end
+      STATE_CLEAR: begin
+        right_dx = 10'bx;
+      	right_dy = 10'bx;
+        right_off = 10'bx;
+        right_top = 10'bx;
+      end
+    endcase
+  end
 
   // The state of the triangle scanline rasterizer is determined
   // by which vertices of the triangle we have already scanned over vertically.
@@ -67,81 +126,39 @@ module triscan(
     if (~rst_n) begin
       state <= STATE_CLEAR;
       
-    end else if (hpos == 641) begin
+    end else if (hpos == 640 + 5) begin
       // During the H-Blank (between rows), we advance both edges to the next row.
       // We also accumulate the amount of horizontal position error that this causes.
       // If we hit one of the vertices of the triangle, we have to change state.
       case (state)
         STATE_CLEAR:
           if (vpos+1 == vtx_1_y) begin
-            left_x    <= vtx_1_x;
-            right_x   <= vtx_1_x;
-
             if (vtx_1_y == vtx_2_y) begin
               state <= STATE_V1_V2;
-              left_err  <= edge_23_dy >> 1;
-              right_err <= edge_13_dy >> 1;
-              left_dx   <= edge_23_dx;
-              left_dy   <= edge_23_dy;
-              right_dx  <= edge_13_dx;
-              right_dy  <= edge_13_dy;
             end else begin
               state <= STATE_V1;
-              left_err  <= edge_12_dy >> 1;
-              right_err <= edge_13_dy >> 1;
-              left_dx   <= edge_12_dx;
-              left_dy   <= edge_12_dy;
-              right_dx  <= edge_13_dx;
-              right_dy  <= edge_13_dy;
             end
           end
         STATE_V1:
           if (vpos+1 == vtx_2_y) begin
             state     <= (vtx_2_y == vtx_3_y) ? STATE_CLEAR : STATE_V1_V2;
-            left_x    <= vtx_2_x;
-            left_err  <= edge_23_dy >> 1;
-            left_dx   <= edge_23_dx;
-            left_dy   <= edge_23_dy;
           end else if (vpos+1 == vtx_3_y) begin
             state     <= STATE_V1_V3;
-            right_x   <= vtx_3_x;
-            right_err <= -edge_23_dy >> 1;
-            right_dx  <= edge_23_dx;
-            right_dy  <= edge_23_dy;
-          end else begin
-            left_err  <= left_err  - abs(left_dx);
-            right_err <= right_err - abs(right_dx);
           end
         STATE_V1_V2:
           if (vpos+1 == vtx_3_y) begin
             state     <= STATE_CLEAR;
-          end else begin
-            left_err  <= left_err  - abs(left_dx);
-            right_err <= right_err - abs(right_dx);
           end
         STATE_V1_V3:
           if (vpos+1 == vtx_2_y) begin
             state     <= STATE_CLEAR;
-          end else begin
-            left_err  <= left_err  - abs(left_dx);
-            right_err <= right_err - abs(right_dx);
           end
       endcase
-
-    end else if (state != STATE_CLEAR) begin
-      // If the position error of the left edge is above the threshold,
-      // make a step along the X axis and reduce the error accordingly.
-      if (left_err[9]) begin
-        left_x <= left_x + sign(left_dx);
-        left_err <= left_err + left_dy;
-      end
-
-      // If the position error of the right edge is above the threshold,
-      // make a step along the X axis and reduce the error accordingly.
-      if (right_err[9]) begin
-          right_x <= right_x + sign(right_dx);
-          right_err <= right_err - right_dy;
-      end
+      
+    end else if (hpos == 640 + 45) begin
+      left_x <= (left_dx[9] ^ left_dy[9] ? -md_quo : md_quo) + left_off;
+    end else if (hpos == 640 + 85) begin
+      right_x <= (right_dx[9] ^ right_dy[9] ? -md_quo : md_quo) + right_off;
     end
   end
   

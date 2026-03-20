@@ -27,15 +27,15 @@ module serial_muldiv #(parameter WIDTH = 10) (
     end else begin
       if (state < WIDTH) begin
         if (accum[4*WIDTH-1]) begin
-          accum[2*WIDTH-1:0] <= {accum[2*WIDTH-2:0], 1'b0} + mu2;
+          accum[2*WIDTH-1:0] <= {accum[2*WIDTH-2:0], 1'b0} + {{WIDTH{1'b0}}, mu2};
         end else begin
           accum[2*WIDTH-1:0] <= {accum[2*WIDTH-2:0], 1'b0};
         end
         accum[4*WIDTH-1:3*WIDTH] <= {accum[4*WIDTH-2:3*WIDTH], 1'b0};
         state <= state + 1;
       end else if (state < 3*WIDTH) begin
-        if (accum[4*WIDTH-2:2*WIDTH-1] >= den) begin
-          accum <= {accum[4*WIDTH-2:2*WIDTH-1] - den, accum[2*WIDTH-2:0], 1'b1};
+        if (accum[4*WIDTH-2:2*WIDTH-1] >= {{WIDTH{1'b0}}, den}) begin
+          accum <= {accum[4*WIDTH-2:2*WIDTH-1] - {{WIDTH{1'b0}}, den}, accum[2*WIDTH-2:0], 1'b1};
         end else begin
           accum <= {accum[4*WIDTH-2:0], 1'b0};
         end

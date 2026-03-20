@@ -19,8 +19,6 @@ project:
   source_files:
     - "hvsync_generator.v"
     - "rasterizer.v"
-    - "serial_div.v"
-    - "serial_mul.v"
     - "serial_muldiv.v"
     - "triscan.v"
 
