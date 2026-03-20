@@ -48,12 +48,12 @@ module tt_um_tomolt_rasterizer (
   reg [5:0] color;
 
   wire [59:0] geometry = {
-    vgeometry[35:30], 4'd0, 
-    vgeometry[29:24], 4'd0, 
-    vgeometry[23:18], 4'd0, 
-    vgeometry[17:12], 4'd0, 
-    vgeometry[11: 6], 4'd0, 
-    vgeometry[ 5: 0], 4'd0
+    1'b0, vgeometry[35:30], 3'd0, 
+    1'b0, vgeometry[29:24], 3'd0, 
+    1'b0, vgeometry[23:18], 3'd0, 
+    1'b0, vgeometry[17:12], 3'd0, 
+    1'b0, vgeometry[11: 6], 3'd0, 
+    1'b0, vgeometry[ 5: 0], 3'd0
   };
 
   localparam
@@ -213,7 +213,7 @@ module tt_um_tomolt_rasterizer (
 
   wire fill;
 
-  triscan tscan(
+  triscan #(.XOFFSET(64)) tscan(
     .clk(clk),
     .rst_n(rst_n),
     .hpos(hpos),
@@ -222,7 +222,7 @@ module tt_um_tomolt_rasterizer (
     .fill(fill)
   );
 
-  wire [5:0] pixel = (display_on && fill) ? color : 6'b000000;
+  wire [5:0] pixel = (display_on && hpos >= 64 && hpos < 640 - 64) ? (fill ? color : 6'b111111) : 6'b000000;
 
   // TinyVGA PMOD
   assign uo_out[0] = pixel[1];

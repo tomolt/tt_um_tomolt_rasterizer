@@ -6,7 +6,7 @@
 
 `default_nettype none
 
-module triscan(
+module triscan #(XOFFSET=0) (
   input wire clk,
   input wire rst_n,
   input wire [9:0] hpos,
@@ -71,6 +71,8 @@ module triscan(
   reg [1:0] state;
   reg [9:0] left_x;
   
+  wire [9:0] xoffset = XOFFSET;
+  
   always @(posedge clk or negedge rst_n) begin
     if (~rst_n) begin
       state <= STATE_CLEAR;
@@ -108,14 +110,14 @@ module triscan(
     // position.
     end else if (hpos == 640 + 45) begin
       if (~left_sign) begin
-        left_x <= left_x1 + md_quo;
+        left_x <= xoffset + left_x1 + md_quo;
       end else begin
-        left_x <= left_x1 - md_quo;
+        left_x <= xoffset + left_x1 - md_quo;
       end
     end
   end
 
-  wire [9:0] right_x = ~right_sign ? right_x1 + md_quo : right_x1 - md_quo;
+  wire [9:0] right_x = ~right_sign ? xoffset + right_x1 + md_quo : xoffset + right_x1 - md_quo;
   
   assign fill = (state != STATE_CLEAR && hpos >= left_x && hpos < right_x);
 endmodule
