@@ -22,17 +22,19 @@ module triscan(
   wire [9:0] vtx_3_x = geometry[19:10];
   wire [9:0] vtx_3_y = geometry[ 9: 0];
   
-  reg [9:0] left_dx;
-  reg [9:0] left_dy;
-  reg [9:0] right_dx;
-  reg [9:0] right_dy;
-  reg [9:0] left_off;
-  reg [9:0] left_top;
-  reg [9:0] right_off;
-  reg [9:0] right_top;
-  wire [9:0] edge_dx = (hpos < 640 + 45 ? left_dx : right_dx);
-  wire [9:0] edge_dy = (hpos < 640 + 45 ? left_dy : right_dy);
-  wire [9:0] edge_top = (hpos < 640 + 45 ? left_top : right_top);
+  // These should (hopefully) be synthesized fully combinationally
+  reg [9:0] left_x1;
+  reg [9:0] left_y1;
+  reg [9:0] left_x2;
+  reg [9:0] left_y2;
+  reg [9:0] right_x1;
+  reg [9:0] right_y1;
+  reg [9:0] right_x2;
+  reg [9:0] right_y2;
+
+  wire [9:0] edge_dx = (hpos < 640 + 49 ? (left_x2 - left_x1) : (right_x2 - right_x1));
+  wire [9:0] edge_dy = (hpos < 640 + 49 ? (left_y2 - left_y1) : (right_y2 - right_y1));
+  wire [9:0] edge_top = (hpos < 640 + 49 ? left_y1 : right_y1);
   
   wire md_load = (hpos == 640 + 10) || (hpos == 640 + 50);
   
@@ -55,22 +57,22 @@ module triscan(
   always @(*) begin
     case (state)
       STATE_V1, STATE_V1_V3: begin
-        left_dx = vtx_2_x - vtx_1_x;
-        left_dy = vtx_2_y - vtx_1_y;
-        left_off = vtx_1_x;
-        left_top = vtx_1_y;
+        left_x1 = vtx_1_x;
+        left_y1 = vtx_1_y;
+        left_x2 = vtx_2_x;
+        left_y2 = vtx_2_y;
       end
       STATE_V1_V2: begin
-        left_dx = vtx_3_x - vtx_2_x;
-        left_dy = vtx_3_y - vtx_2_y;
-        left_off = vtx_2_x;
-        left_top = vtx_2_y;
+        left_x1 = vtx_2_x;
+        left_y1 = vtx_2_y;
+        left_x2 = vtx_3_x;
+        left_y2 = vtx_3_y;
       end
       STATE_CLEAR: begin
-        left_dx = 10'bx;
-      	left_dy = 10'bx;
-        left_off = 10'bx;
-        left_top = 10'bx;
+        left_x1 = 10'bx;
+        left_y1 = 10'bx;
+        left_x2 = 10'bx;
+        left_y2 = 10'bx;
       end
     endcase
   end
@@ -78,22 +80,22 @@ module triscan(
   always @(*) begin
     case (state)
       STATE_V1, STATE_V1_V2: begin
-        right_dx = vtx_3_x - vtx_1_x;
-        right_dy = vtx_3_y - vtx_1_y;
-        right_off = vtx_1_x;
-        right_top = vtx_1_y;
+        right_x1 = vtx_1_x;
+        right_y1 = vtx_1_y;
+        right_x2 = vtx_3_x;
+        right_y2 = vtx_3_y;
       end
       STATE_V1_V3: begin
-        right_dx = vtx_2_x - vtx_3_x;
-        right_dy = vtx_2_y - vtx_3_y;
-        right_off = vtx_3_x;
-        right_top = vtx_3_y;
+        right_x1 = vtx_3_x;
+        right_y1 = vtx_3_y;
+        right_x2 = vtx_2_x;
+        right_y2 = vtx_2_y;
       end
       STATE_CLEAR: begin
-        right_dx = 10'bx;
-      	right_dy = 10'bx;
-        right_off = 10'bx;
-        right_top = 10'bx;
+        right_x1 = 10'bx;
+        right_y1 = 10'bx;
+        right_x2 = 10'bx;
+        right_y2 = 10'bx;
       end
     endcase
   end
@@ -156,9 +158,9 @@ module triscan(
       endcase
       
     end else if (hpos == 640 + 45) begin
-      left_x <= (left_dx[9] ^ left_dy[9] ? -md_quo : md_quo) + left_off;
+      left_x <= (edge_dx[9] ^ edge_dy[9] ? -md_quo : md_quo) + left_x1;
     end else if (hpos == 640 + 85) begin
-      right_x <= (right_dx[9] ^ right_dy[9] ? -md_quo : md_quo) + right_off;
+      right_x <= (edge_dx[9] ^ edge_dy[9] ? -md_quo : md_quo) + right_x1;
     end
   end
   
