@@ -41,6 +41,7 @@ module tt_um_tomolt_rasterizer (
     10'd600, 10'd320
   };
 
+`define SERIAL_GEOMETRY 1
 `ifdef SERIAL_GEOMETRY
   reg [59:0] geometry;
 
