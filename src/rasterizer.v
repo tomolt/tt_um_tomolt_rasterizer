@@ -41,6 +41,7 @@ module tt_um_tomolt_rasterizer (
     10'd600, 10'd320
   };
 
+`define SERIAL_GEOMETRY 1
 `ifdef SERIAL_GEOMETRY
   reg [59:0] geometry;
 
@@ -202,7 +203,6 @@ module tt_um_tomolt_rasterizer (
   end
   */
 
-`ifndef NOTDEF
   wire fill;
 
   triscan tscan(
@@ -214,28 +214,12 @@ module tt_um_tomolt_rasterizer (
     .fill(fill)
   );
 
-  //wire [2:0] value = fill ? geometry_sel : 3'b000;
   wire [2:0] value = fill ? 3'b111 : 3'b000;
 
   assign rgb = display_on ? value : 0;
 
   // TinyVGA PMOD
   assign uo_out = {hsync, rgb[2], rgb[1], rgb[0], vsync, rgb[2], rgb[1], rgb[0]};
-`else
-  // TEMP just test the muldiv module right now
-  wire [9:0] md_quo;
-  wire [9:0] md_rem;
-  serial_muldiv muldiv(
-    .clk(clk),
-    .load(ui_in[0]),
-    .mu1({ui_in[1], 9'b0}),
-    .mu2({ui_in[2], 9'b0}),
-    .den({ui_in[3], 9'b0}),
-    .quo(md_quo),
-    .rem(md_rem)
-  );
-  assign uo_out = { 7'b0, md_quo[9], md_rem[9] };
-`endif
 
   // Unused outputs assigned to 0.
   assign uio_out = 0;
