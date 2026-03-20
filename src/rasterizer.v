@@ -72,7 +72,7 @@ module tt_um_tomolt_rasterizer (
   // As a workaround, only update the geometry on the falling edge of the
   // clock. That way, it is stable over the positive edge, and hopefully no
   // delay buffers need to be inserted.
-  always @(negedge rst_n or negedge clk) begin
+  always @(negedge rst_n or posedge clk) begin
     if (~rst_n) begin
       geometry <= default_geometry;
       color <= default_color;
