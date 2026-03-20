@@ -29,9 +29,13 @@ module triscan(
   wire [9:0] edge_23_dx = vtx_3_x - vtx_2_x;
   wire [9:0] edge_23_dy = vtx_3_y - vtx_2_y;
   
+  reg [9:0] left_dx;
+  reg [9:0] left_dy;
   reg [9:0] left_x;
   reg [9:0] left_err;
   
+  reg [9:0] right_dx;
+  reg [9:0] right_dy;
   reg [9:0] right_x;
   reg [9:0] right_err;
 
@@ -70,70 +74,73 @@ module triscan(
       case (state)
         STATE_CLEAR:
           if (vpos+1 == vtx_1_y) begin
-            state     <= (vtx_1_y == vtx_2_y) ? STATE_V1_V2 : STATE_V1;
             left_x    <= vtx_1_x;
             right_x   <= vtx_1_x;
-            left_err  <= edge_12_dy >> 1;
-            right_err <= edge_13_dy >> 1;
+
+            if (vtx_1_y == vtx_2_y) begin
+              state <= STATE_V1_V2;
+              left_err  <= edge_23_dy >> 1;
+              right_err <= edge_13_dy >> 1;
+              left_dx   <= edge_23_dx;
+              left_dy   <= edge_23_dy;
+              right_dx  <= edge_13_dx;
+              right_dy  <= edge_13_dy;
+            end else begin
+              state <= STATE_V1;
+              left_err  <= edge_12_dy >> 1;
+              right_err <= edge_13_dy >> 1;
+              left_dx   <= edge_12_dx;
+              left_dy   <= edge_12_dy;
+              right_dx  <= edge_13_dx;
+              right_dy  <= edge_13_dy;
+            end
           end
         STATE_V1:
           if (vpos+1 == vtx_2_y) begin
             state     <= (vtx_2_y == vtx_3_y) ? STATE_CLEAR : STATE_V1_V2;
             left_x    <= vtx_2_x;
             left_err  <= edge_23_dy >> 1;
+            left_dx   <= edge_23_dx;
+            left_dy   <= edge_23_dy;
           end else if (vpos+1 == vtx_3_y) begin
             state     <= STATE_V1_V3;
             right_x   <= vtx_3_x;
             right_err <= -edge_23_dy >> 1;
+            right_dx  <= edge_23_dx;
+            right_dy  <= edge_23_dy;
           end else begin
-            left_err  <= left_err  - abs(edge_12_dx);
-            right_err <= right_err - abs(edge_13_dx);
+            left_err  <= left_err  - abs(left_dx);
+            right_err <= right_err - abs(right_dx);
           end
         STATE_V1_V2:
           if (vpos+1 == vtx_3_y) begin
             state     <= STATE_CLEAR;
           end else begin
-            left_err  <= left_err  - abs(edge_23_dx);
-            right_err <= right_err - abs(edge_13_dx);
+            left_err  <= left_err  - abs(left_dx);
+            right_err <= right_err - abs(right_dx);
           end
         STATE_V1_V3:
           if (vpos+1 == vtx_2_y) begin
             state     <= STATE_CLEAR;
           end else begin
-            left_err  <= left_err  - abs(edge_12_dx);
-            right_err <= right_err - abs(edge_23_dx);
+            left_err  <= left_err  - abs(left_dx);
+            right_err <= right_err - abs(right_dx);
           end
       endcase
-    end else begin
+
+    end else if (state != STATE_CLEAR) begin
+      // If the position error of the left edge is above the threshold,
+      // make a step along the X axis and reduce the error accordingly.
       if (left_err[9]) begin
-        // If the position error of the left edge is above the threshold,
-      	// make a step along the X axis and reduce the error accordingly.
-        case (state)
-          STATE_CLEAR:;
-          STATE_V1, STATE_V1_V3: begin
-            left_x <= left_x + sign(edge_12_dx);
-            left_err <= left_err + edge_12_dy;
-          end
-          STATE_V1_V2: begin
-            left_x <= left_x + sign(edge_23_dx);
-            left_err <= left_err + edge_23_dy;
-          end
-        endcase
+        left_x <= left_x + sign(left_dx);
+        left_err <= left_err + left_dy;
       end
+
+      // If the position error of the right edge is above the threshold,
+      // make a step along the X axis and reduce the error accordingly.
       if (right_err[9]) begin
-        // If the position error of the right edge is above the threshold,
-      	// make a step along the X axis and reduce the error accordingly.
-        case (state)
-          STATE_CLEAR:;
-          STATE_V1, STATE_V1_V2: begin
-            right_x <= right_x + sign(edge_13_dx);
-            right_err <= right_err + edge_13_dy;
-          end
-          STATE_V1_V3: begin
-            right_x <= right_x - sign(edge_23_dx);
-            right_err <= right_err - edge_23_dy;
-          end
-        endcase
+          right_x <= right_x + sign(right_dx);
+          right_err <= right_err - right_dy;
       end
     end
   end
