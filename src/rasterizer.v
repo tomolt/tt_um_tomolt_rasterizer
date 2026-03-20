@@ -35,9 +35,9 @@ module tt_um_tomolt_rasterizer (
   );
 
   wire [35:0] default_vgeometry = {
-    6'd15, 6'd9,
-    6'd7, 6'd21,
-    6'd35, 6'd11
+    6'd35, 6'd1,
+    6'd0, 6'd63,
+    6'd63, 6'd11
   };
 
   wire [5:0] default_color = 6'b000011;
@@ -78,11 +78,13 @@ module tt_um_tomolt_rasterizer (
     if (~rst_n) begin
       vgeometry <= default_vgeometry;
       color <= default_color;
-      sck_prev <= 0;
+      sck_prev <= sck;
       serial_state <= SERIAL_V1X;
       serial_count <= 0;
 
     end else begin
+      sck_prev <= sck;
+      
       if (~cs_n) begin
 
         if (~sck_prev && sck) begin
@@ -112,10 +114,7 @@ module tt_um_tomolt_rasterizer (
             serial_count <= serial_count + 1;
           end
         end
-        sck_prev <= sck;
-
       end else begin
-        sck_prev <= 0;
         serial_state <= SERIAL_V1X;
         serial_count <= 0;
       end
