@@ -27,7 +27,6 @@ Attach the TinyVGA PMOD adapter.
 The VGA mode is 640x480, 60Hz, 2 bits per color.
 
 Reset the module.
-The first frame that may or may not be rendered incorrectly, this has not been taken into consideration during development.
 If this tile works as intended, you should be able to see a red triangle on a white background, with black bars to either side.
 
 The UIO pins can be used to programmatically change the geometry (and color of the geometry) that is being rendered.
