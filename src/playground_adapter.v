@@ -6,6 +6,7 @@
 
 `include "hvsync_generator.v"
 `include "triscan.v"
+`include "prog_if.v"
 `include "rasterizer.v"
 `include "serial_muldiv.v"
 

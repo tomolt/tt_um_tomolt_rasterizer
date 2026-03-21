@@ -11,27 +11,25 @@ module triscan #(XOFFSET=0) (
   input wire rst_n,
   input wire [9:0] hpos,
   input wire [9:0] vpos,
-  input wire [59:0] geometry,
+  input wire [9:0] v1x,
+  input wire [9:0] v1y,
+  input wire [9:0] v2x,
+  input wire [9:0] v2y,
+  input wire [9:0] v3x,
+  input wire [9:0] v3y,
   output wire fill
 );
 
-  wire [9:0] vtx_1_x = geometry[59:50];
-  wire [9:0] vtx_1_y = geometry[49:40];
-  wire [9:0] vtx_2_x = geometry[39:30];
-  wire [9:0] vtx_2_y = geometry[29:20];
-  wire [9:0] vtx_3_x = geometry[19:10];
-  wire [9:0] vtx_3_y = geometry[ 9: 0];
-  
-  wire [9:0] left_x1 = (state == STATE_V1 || state == STATE_V1_V3) ? vtx_1_x : vtx_2_x;
-  wire [9:0] left_y1 = (state == STATE_V1 || state == STATE_V1_V3) ? vtx_1_y : vtx_2_y;
-  wire [9:0] left_x2 = (state == STATE_V1 || state == STATE_V1_V3) ? vtx_2_x : vtx_3_x;
-  wire [9:0] left_y2 = (state == STATE_V1 || state == STATE_V1_V3) ? vtx_2_y : vtx_3_y;
+  wire [9:0] left_x1 = (state == STATE_V1 || state == STATE_V1_V3) ? v1x : v2x;
+  wire [9:0] left_y1 = (state == STATE_V1 || state == STATE_V1_V3) ? v1y : v2y;
+  wire [9:0] left_x2 = (state == STATE_V1 || state == STATE_V1_V3) ? v2x : v3x;
+  wire [9:0] left_y2 = (state == STATE_V1 || state == STATE_V1_V3) ? v2y : v3y;
   wire left_sign = left_x1 > left_x2;
   
-  wire [9:0] right_x1 = (state == STATE_V1 || state == STATE_V1_V2) ? vtx_1_x : vtx_3_x;
-  wire [9:0] right_y1 = (state == STATE_V1 || state == STATE_V1_V2) ? vtx_1_y : vtx_3_y;
-  wire [9:0] right_x2 = (state == STATE_V1 || state == STATE_V1_V2) ? vtx_3_x : vtx_2_x;
-  wire [9:0] right_y2 = (state == STATE_V1 || state == STATE_V1_V2) ? vtx_3_y : vtx_2_y;
+  wire [9:0] right_x1 = (state == STATE_V1 || state == STATE_V1_V2) ? v1x : v3x;
+  wire [9:0] right_y1 = (state == STATE_V1 || state == STATE_V1_V2) ? v1y : v3y;
+  wire [9:0] right_x2 = (state == STATE_V1 || state == STATE_V1_V2) ? v3x : v2x;
+  wire [9:0] right_y2 = (state == STATE_V1 || state == STATE_V1_V2) ? v3y : v2y;
   wire right_sign = right_x1 > right_x2;
 
   wire wired_to_left = hpos < 640 + 49;
@@ -47,7 +45,6 @@ module triscan #(XOFFSET=0) (
 
   wire md_load = (hpos == 640 + 10) || (hpos == 640 + 50);
   wire [9:0] md_quo;
-
   wire [9:0] md_rem;
   
   serial_muldiv muldiv(
@@ -83,26 +80,26 @@ module triscan #(XOFFSET=0) (
       // If we hit one of the vertices of the triangle, we have to change state.
       case (state)
         STATE_CLEAR:
-          if (vpos + 10'd1 == vtx_1_y) begin
-            if (vtx_1_y == vtx_2_y) begin
+          if (vpos + 10'd1 == v1y) begin
+            if (v1y == v2y) begin
               state <= STATE_V1_V2;
             end else begin
               state <= STATE_V1;
             end
           end
         STATE_V1:
-          if (vpos + 10'd1 == vtx_2_y) begin
-            state     <= (vtx_2_y == vtx_3_y) ? STATE_CLEAR : STATE_V1_V2;
-          end else if (vpos+1 == vtx_3_y) begin
-            state     <= STATE_V1_V3;
+          if (vpos + 10'd1 == v2y) begin
+            state <= (v2y == v3y) ? STATE_CLEAR : STATE_V1_V2;
+          end else if (vpos + 10'd1 == v3y) begin
+            state <= STATE_V1_V3;
           end
         STATE_V1_V2:
-          if (vpos + 10'd1 == vtx_3_y) begin
-            state     <= STATE_CLEAR;
+          if (vpos + 10'd1 == v3y) begin
+            state <= STATE_CLEAR;
           end
         STATE_V1_V3:
-          if (vpos + 10'd1 == vtx_2_y) begin
-            state     <= STATE_CLEAR;
+          if (vpos + 10'd1 == v2y) begin
+            state <= STATE_CLEAR;
           end
       endcase
       
@@ -117,7 +114,9 @@ module triscan #(XOFFSET=0) (
     end
   end
 
-  wire [9:0] right_x = ~right_sign ? xoffset + right_x1 + md_quo : xoffset + right_x1 - md_quo;
+  wire [9:0] right_x = ~right_sign ?
+    xoffset + right_x1 + md_quo :
+    xoffset + right_x1 - md_quo;
   
   assign fill = (state != STATE_CLEAR && hpos >= left_x && hpos < right_x);
 endmodule

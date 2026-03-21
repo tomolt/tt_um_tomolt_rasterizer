@@ -34,194 +34,54 @@ module tt_um_tomolt_rasterizer (
     .vpos(vpos)
   );
 
-  wire [35:0] default_vgeometry = {
-    6'd35, 6'd1,
-    6'd0, 6'd63,
-    6'd63, 6'd11
-  };
-
-  wire [5:0] default_color = 6'b000011;
-
-`define SERIAL_GEOMETRY 1
-`ifdef SERIAL_GEOMETRY
-  reg [35:0] vgeometry;
-  reg [5:0] color;
-
-  wire [59:0] geometry = {
-    1'b0, vgeometry[35:30], 3'd0, 
-    1'b0, vgeometry[29:24], 3'd0, 
-    1'b0, vgeometry[23:18], 3'd0, 
-    1'b0, vgeometry[17:12], 3'd0, 
-    1'b0, vgeometry[11: 6], 3'd0, 
-    1'b0, vgeometry[ 5: 0], 3'd0
-  };
-
-  localparam
-    SERIAL_V1X = 3'b000,
-    SERIAL_V1Y = 3'b001,
-    SERIAL_V2X = 3'b010,
-    SERIAL_V2Y = 3'b011,
-    SERIAL_V3X = 3'b100,
-    SERIAL_V3Y = 3'b101,
-    SERIAL_COL = 3'b110;
-
   wire cs_n = uio_in[0];
   wire mosi = uio_in[1];
   wire sck  = uio_in[3];
+  wire [9:0] v1x;
+  wire [9:0] v1y;
+  wire [9:0] v2x;
+  wire [9:0] v2y;
+  wire [9:0] v3x;
+  wire [9:0] v3y;
+  wire [5:0] fcolor;
+  wire [5:0] bcolor;
 
-  reg [2:0] serial_state;
-  reg [3:0] serial_count;
+  prog_if pif(
+    .clk(clk),
+    .rst_n(rst_n),
+    .cs_n(cs_n),
+    .mosi(mosi),
+    .sck(sck),
+    .v1x(v1x),
+    .v1y(v1y),
+    .v2x(v2x),
+    .v2y(v2y),
+    .v3x(v3x),
+    .v3y(v3y),
+    .fcolor(fcolor),
+    .bcolor(bcolor)
+  );
 
-  reg sck_prev;
-
-  always @(negedge rst_n or posedge clk) begin
-    if (~rst_n) begin
-      vgeometry <= default_vgeometry;
-      color <= default_color;
-      sck_prev <= 0;
-      serial_state <= SERIAL_V1X;
-      serial_count <= 0;
-
-    end else begin
-      sck_prev <= sck;
-      
-      if (~cs_n) begin
-
-        if (~sck_prev && sck) begin
-          // Handling 'geometry' as one big shift register causes the PDK
-          // to insert an excessive number of delay buffers and eventually
-          // fail the timing checks. So instead, we treat every 10-bit word
-          // as its own little shift register.
-          case (serial_state)
-            SERIAL_V1X: vgeometry[35:30] <= {vgeometry[35-1:30], mosi};
-            SERIAL_V1Y: vgeometry[29:24] <= {vgeometry[29-1:24], mosi};
-            SERIAL_V2X: vgeometry[23:18] <= {vgeometry[23-1:18], mosi};
-            SERIAL_V2Y: vgeometry[17:12] <= {vgeometry[17-1:12], mosi};
-            SERIAL_V3X: vgeometry[11: 6] <= {vgeometry[11-1: 6], mosi};
-            SERIAL_V3Y: vgeometry[ 5: 0] <= {vgeometry[ 5-1: 0], mosi};
-            SERIAL_COL: color <= {color[5-1:0], mosi};
-            default:;
-          endcase
-
-          if (serial_count == 9) begin
-            if (serial_state == SERIAL_COL) begin
-              serial_state <= SERIAL_V1X;
-            end else begin
-              serial_state <= serial_state + 1;
-            end
-            serial_count <= 0;
-          end else begin
-            serial_count <= serial_count + 1;
-          end
-        end
-      end else begin
-        serial_state <= SERIAL_V1X;
-        serial_count <= 0;
-      end
-    end
-  end
-`else
-  wire [59:0] geometry = default_geometry;
-  wire [5:0] color = default_color;
-`endif
-
-  /*
-  reg [4:0] permut_1;
-  reg [4:0] permut_2;
-
-  reg permut_1_dir;
-  reg permut_2_dir;
-
-  // Animate the geometry just a tiny bit to make it more interesting.
-  always @(posedge vsync or negedge rst_n) begin
-    if (~rst_n) begin
-      permut_1 <= 0;
-      permut_1_dir <= 1;
-      permut_2 <= 0;
-      permut_2_dir <= 1;
-    end else begin
-      if (permut_1_dir) begin
-        if (permut_1 == 5'b11111) begin
-          permut_1_dir <= 0;
-        end else begin
-          permut_1 <= permut_1 + 1;
-        end
-      end else begin
-        if (permut_1 == 5'b00000) begin
-          permut_1_dir <= 1;
-        end else begin
-          permut_1 <= permut_1 - 1;
-        end
-      end
-
-      if (permut_2_dir) begin
-        if (permut_2 == 5'b11101) begin
-          permut_2_dir <= 0;
-        end else begin
-          permut_2 <= permut_2 + 1;
-        end
-      end else begin
-        if (permut_2 == 5'b00001) begin
-          permut_2_dir <= 1;
-        end else begin
-          permut_2 <= permut_2 - 1;
-        end
-      end
-    end
-  end
-  */
-
-  /*
-  wire [59:0] geometry_1 = {
-    10'd100 + {6'b000000, permut_1[4:1]}, 10'd1,
-    10'd150 + {5'b00000, permut_2}, 10'd100,
-    10'd200, 10'd60 + {5'b00000, permut_1}
-  };
-  */
-
- /*
-  wire [59:0] geometry_1 = {
-    10'd100, 10'd1,
-    10'd150, 10'd100,
-    10'd200, 10'd60
-  };
-
-  wire [59:0] geometry_3 = {
-    10'd300, 10'd350,
-    10'd150, 10'd400,
-    10'd250, 10'd440
-  };
-
-  reg [2:0] geometry_sel;
-
-  always @(posedge clk) begin
-    if (hpos == 640) begin
-      if (vpos+1 < geometry_2[49:40]) begin
-        geometry_sel <= 3'b001;
-        geometry <= geometry_1;
-      end else if (vpos+1 < geometry_3[49:40]) begin
-        geometry_sel <= 3'b010;
-        geometry <= geometry_2;
-      end else begin
-        geometry_sel <= 3'b100;
-        geometry <= geometry_3;
-      end
-    end
-  end
-  */
+  localparam BLACKBAR = 64;
 
   wire fill;
 
-  triscan #(.XOFFSET(64)) tscan(
+  triscan #(.XOFFSET(BLACKBAR)) tscan(
     .clk(clk),
     .rst_n(rst_n),
     .hpos(hpos),
     .vpos(vpos),
-    .geometry(geometry),
+    .v1x(v1x),
+    .v1y(v1y),
+    .v2x(v2x),
+    .v2y(v2y),
+    .v3x(v3x),
+    .v3y(v3y),
     .fill(fill)
   );
 
-  wire [5:0] pixel = (display_on && hpos >= 64 && hpos < 640 - 64) ? (fill ? color : 6'b111111) : 6'b000000;
+  wire [5:0] pixel = (display_on && hpos >= BLACKBAR && hpos < 640 - BLACKBAR) ?
+    (fill ? fcolor : bcolor) : 6'b000000;
 
   // TinyVGA PMOD
   assign uo_out[0] = pixel[1];
