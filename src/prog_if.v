@@ -57,12 +57,12 @@ module prog_if (
   always @(negedge rst_n or posedge clk) begin
     if (~rst_n) begin
       // Default geometry & color
-      data_v1x <= 6'd35;
-      data_v1y <= 6'd1;
-      data_v2x <= 6'd0;
-      data_v2y <= 6'd63;
-      data_v3x <= 6'd63;
-      data_v3y <= 6'd11;
+      data_v1x <= 6'd31;
+      data_v1y <= 6'd10;
+      data_v2x <= 6'd10;
+      data_v2y <= 6'd50;
+      data_v3x <= 6'd56;
+      data_v3y <= 6'd40;
       fcolor   <= 6'b000011;
       bcolor   <= 6'b111111;
 
