@@ -97,7 +97,8 @@ module tt_um_tomolt_rasterizer (
   assign uio_oe[3:0] = 0;
 
   // Event Indicator Pins
-  assign uio_oe[5:4] = 1;
+  assign uio_oe[4] = 1;
+  assign uio_oe[5] = 1;
   assign uio_out[4] = vsync;
   assign uio_out[5] = hsync;
 

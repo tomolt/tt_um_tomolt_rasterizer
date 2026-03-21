@@ -34,4 +34,9 @@ module tb ();
       .rst_n  (rst_n)     // not reset
   );
 
+  // These are here to make it easier to extract VGA signals
+  wire vsync = uo_out[3];
+  wire hsync = uo_out[7];
+  wire [5:0] rgb = {uo_out[2], uo_out[6], uo_out[1], uo_out[5], uo_out[0], uo_out[4]};
+
 endmodule
