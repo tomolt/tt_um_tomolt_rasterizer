@@ -99,4 +99,4 @@ async def frame_dump(dut, name):
 
 @cocotb.test()
 async def test_vga_output(dut):
-    await frame_dump(dut, "generated_images/frame_0.png")
+    await frame_dump(dut, "frame_0.png")
