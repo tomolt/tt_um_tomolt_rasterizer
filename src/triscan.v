@@ -23,7 +23,7 @@ module triscan #(XOFFSET=0) (
   localparam H_DISPLAY = 640;
   localparam V_DISPLAY = 480;
 
-  wire next_vpos = vpos < V_DISPLAY ? vpos + 1 : 0;
+  wire [9:0] next_vpos = vpos < V_DISPLAY ? vpos + 10'd1 : 0;
 
   wire [9:0] left_x1 = (state == STATE_V1 || state == STATE_V1_V3) ? v1x : v2x;
   wire [9:0] left_y1 = (state == STATE_V1 || state == STATE_V1_V3) ? v1y : v2y;
