@@ -68,6 +68,10 @@ Taking the CS pin high, then low again resets the bit- and word-position of the 
 The clock frequency must not be faster than 12 MHz.
 In practice you may even need to be choose it much slower than that.
 
+The internal data storage is immediately updated during transfer, so it should not be done while the triangle scanline is active.
+It is best to wait for a positive edge on the vsync signal supplied on a UIO pin.
+The hsync signal can also be used if there is sufficient vertical headroom.
+
 ## External hardware
 
 - TinyVGA PMOD adapter, atatched to a VGA-compatible display
