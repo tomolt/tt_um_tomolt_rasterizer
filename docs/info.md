@@ -49,8 +49,8 @@ The serial interface behaves like a one-way SPI (or Microwire) slave device.
 A bit is read from the MOSI pin on every positive edge of the SCK pin, but only if CS is low.
 This behaviour should correspond to SPI Mode 0.
 
-Over this serial line, up to 7 words can be transferred.
-Every word is transferred as 10 bits; Smaller values need to be padded in the higher bit positions.
+Over this serial line, up to 8 words can be transferred (After that, it loops back to the first word).
+Every word is transferred as 8 bits; Values need to be padded in the higher bit positions.
 The bits in each word are transferred in MSB order.
 
 | Index | Word |
@@ -61,14 +61,15 @@ The bits in each word are transferred in MSB order.
 |     3 | Vertex V2 Y coordinate |
 |     4 | Vertex V3 X coordinate |
 |     5 | Vertex V3 Y coordinate |
-|     6 | Triangle Fill Color (RRGGBB, MSB at the left) |
+|     6 | Triangle Fill Color (RRGGBB, R is LSB) |
+|     7 | Background Color (RRGGBB, R is LSB) |
 
 Taking the CS pin high, then low again resets the bit- and word-position of the serial interface, allowing you to reset the serial interface (but not the geometry data) to a known state.
 
 The clock frequency must not be faster than 12 MHz.
 In practice you may even need to be choose it much slower than that.
 
-The internal data storage is immediately updated during transfer, so it should not be done while the triangle scanline is active.
+The internal data storage is immediately updated during transfer, so it should not be clocked while the triangle scanline is active.
 It is best to wait for a positive edge on the vsync signal supplied on a UIO pin.
 The hsync signal can also be used if there is sufficient vertical headroom.
 

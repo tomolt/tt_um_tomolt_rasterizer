@@ -40,16 +40,15 @@ module playground_adapter (
   assign hsync = uo_out[7];
   assign vsync = uo_out[3];
   assign rgb = uo_out[2:0];
-
-  wire [59:0] new_geometry = {
-    4'd0, 6'd31,
-    4'd0, 6'd10,
-    4'd0, 6'd0,
-    4'd0, 6'd56,
-    4'd0, 6'd63,
-    4'd0, 6'd24
-  };
-  wire [9:0] new_color = {4'd0, 6'b110011};
+  
+  wire [7:0] new_v1x = 8'd31;
+  wire [7:0] new_v1y = 8'd10;
+  wire [7:0] new_v2x = 8'd0;
+  wire [7:0] new_v2y = 8'd56;
+  wire [7:0] new_v3x = 8'd63;
+  wire [7:0] new_v3y = 8'd24;
+  wire [7:0] new_fcolor = 8'b00110011;
+  wire [7:0] new_bcolor = 8'b00001100;
   
   reg [2:0] serial_div;
   reg [6:0] serial_cur;
@@ -83,10 +82,26 @@ module playground_adapter (
       end
       serial_clk <= (serial_div <= 3'b100);
       if (serial_div == 3'b001) begin
-        serial_mosi <= serial_cur < 60 ? new_geometry[59-serial_cur[5:0]] : new_color[9-(serial_cur-60)];
+        if (serial_cur < 1*8) begin
+          serial_mosi <= new_v1x[7-(serial_cur-0*8)];
+        end else if (serial_cur < 2*8) begin
+          serial_mosi <= new_v1y[7-(serial_cur-1*8)];
+        end else if (serial_cur < 3*8) begin
+          serial_mosi <= new_v2x[7-(serial_cur-2*8)];
+        end else if (serial_cur < 4*8) begin
+          serial_mosi <= new_v2y[7-(serial_cur-3*8)];
+        end else if (serial_cur < 5*8) begin
+          serial_mosi <= new_v3x[7-(serial_cur-4*8)];
+        end else if (serial_cur < 6*8) begin
+          serial_mosi <= new_v3y[7-(serial_cur-5*8)];
+        end else if (serial_cur < 7*8) begin
+          serial_mosi <= new_fcolor[7-(serial_cur-6*8)];
+        end else begin
+          serial_mosi <= new_bcolor[7-(serial_cur-7*8)];
+        end
       end
       if (serial_div == 3'b110) begin
-        if (serial_cur < 70-1) begin
+        if (serial_cur < 8*8-1) begin
           serial_cur <= serial_cur + 1;
         end else begin
           serial_cur <= 0;
