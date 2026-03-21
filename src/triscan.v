@@ -20,6 +20,11 @@ module triscan #(XOFFSET=0) (
   output wire fill
 );
 
+  localparam H_DISPLAY = 640;
+  localparam V_DISPLAY = 480;
+
+  wire next_vpos = vpos < V_DISPLAY ? vpos + 1 : 0;
+
   wire [9:0] left_x1 = (state == STATE_V1 || state == STATE_V1_V3) ? v1x : v2x;
   wire [9:0] left_y1 = (state == STATE_V1 || state == STATE_V1_V3) ? v1y : v2y;
   wire [9:0] left_x2 = (state == STATE_V1 || state == STATE_V1_V3) ? v2x : v3x;
@@ -32,7 +37,7 @@ module triscan #(XOFFSET=0) (
   wire [9:0] right_y2 = (state == STATE_V1 || state == STATE_V1_V2) ? v3y : v2y;
   wire right_sign = right_x1 > right_x2;
 
-  wire wired_to_left = hpos < 640 + 49;
+  wire wired_to_left = hpos < H_DISPLAY + 49;
   wire [9:0] edge_x1 = wired_to_left ? left_x1 : right_x1;
   wire [9:0] edge_y1 = wired_to_left ? left_y1 : right_y1;
   wire [9:0] edge_x2 = wired_to_left ? left_x2 : right_x2;
@@ -41,9 +46,9 @@ module triscan #(XOFFSET=0) (
 
   wire [9:0] edge_dx_abs = ~edge_sign ? edge_x2 - edge_x1 : edge_x1 - edge_x2;
   wire [9:0] edge_dy = edge_y2 - edge_y1;
-  wire [9:0] edge_dist = (vpos + 10'd1) - edge_y1;
+  wire [9:0] edge_dist = next_vpos - edge_y1;
 
-  wire md_load = (hpos == 640 + 10) || (hpos == 640 + 50);
+  wire md_load = (hpos == H_DISPLAY + 10) || (hpos == H_DISPLAY + 50);
   wire [9:0] md_quo;
   wire [9:0] md_rem;
   
@@ -74,13 +79,13 @@ module triscan #(XOFFSET=0) (
     if (~rst_n) begin
       state <= STATE_CLEAR;
       
-    end else if (hpos == 640 + 5) begin
+    end else if (hpos == H_DISPLAY + 5) begin
       // During the H-Blank (between rows), we advance both edges to the next row.
       // We also accumulate the amount of horizontal position error that this causes.
       // If we hit one of the vertices of the triangle, we have to change state.
       case (state)
         STATE_CLEAR:
-          if (vpos + 10'd1 == v1y) begin
+          if (next_vpos == v1y) begin
             if (v1y == v2y) begin
               state <= STATE_V1_V2;
             end else begin
@@ -88,24 +93,24 @@ module triscan #(XOFFSET=0) (
             end
           end
         STATE_V1:
-          if (vpos + 10'd1 == v2y) begin
+          if (next_vpos == v2y) begin
             state <= (v2y == v3y) ? STATE_CLEAR : STATE_V1_V2;
-          end else if (vpos + 10'd1 == v3y) begin
+          end else if (next_vpos == v3y) begin
             state <= STATE_V1_V3;
           end
         STATE_V1_V2:
-          if (vpos + 10'd1 == v3y) begin
+          if (next_vpos == v3y) begin
             state <= STATE_CLEAR;
           end
         STATE_V1_V3:
-          if (vpos + 10'd1 == v2y) begin
+          if (next_vpos == v2y) begin
             state <= STATE_CLEAR;
           end
       endcase
       
     // Wait until the multiply-divide unit is done, then update the edge
     // position.
-    end else if (hpos == 640 + 45) begin
+    end else if (hpos == H_DISPLAY + 45) begin
       if (~left_sign) begin
         left_x <= xoffset + left_x1 + md_quo;
       end else begin
