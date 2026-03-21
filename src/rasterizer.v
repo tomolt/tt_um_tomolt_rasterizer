@@ -22,11 +22,10 @@ module tt_um_tomolt_rasterizer (
   wire display_on;
   wire [9:0] hpos;
   wire [9:0] vpos;
-  wire hvreset = ~rst_n;
 
   hvsync_generator hvsync_gen(
     .clk(clk),
-    .reset(hvreset),
+    .rst_n(rst_n),
     .hsync(hsync),
     .vsync(vsync),
     .display_on(display_on),
