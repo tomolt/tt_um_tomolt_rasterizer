@@ -48,7 +48,7 @@ module triscan #(XOFFSET=0) (
   wire [9:0] edge_dy = edge_y2 - edge_y1;
   wire [9:0] edge_dist = next_vpos - edge_y1;
 
-  wire md_load = (hpos == H_DISPLAY + 10) || (hpos == H_DISPLAY + 50);
+  wire md_load = ~rst_n || (hpos == H_DISPLAY + 10) || (hpos == H_DISPLAY + 50);
   wire [9:0] md_quo;
   wire [9:0] md_rem;
   
