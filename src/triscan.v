@@ -78,6 +78,7 @@ module triscan #(XOFFSET=0) (
   always @(posedge clk or negedge rst_n) begin
     if (~rst_n) begin
       state <= STATE_CLEAR;
+      left_x <= 0;
       
     end else if (hpos == H_DISPLAY + 5) begin
       // During the H-Blank (between rows), we advance both edges to the next row.
